@@ -1,0 +1,20 @@
+{
+  "name": "zarqa-people",
+  "version": "0.3.0",
+  "private": true,
+  "description": "Arabic/English HR workspace with demo, Workspace and Supabase editions",
+  "license": "MIT",
+  "scripts": {
+    "pretest": "npm run build:cloud",
+    "test": "node tests/core.test.cjs && node tests/operations.test.cjs && node tests/interface.test.cjs && node tests/data-admin.test.cjs && node --test tests/cloud.test.mjs",
+    "build:cloud": "node scripts/build-cloud.mjs",
+    "package:cloud": "npm run build:cloud && python3 scripts/package-cloud.py"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.117.3"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.10",
+    "esbuild": "0.25.12"
+  }
+}

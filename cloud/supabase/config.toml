@@ -1,0 +1,4 @@
+[functions.hr-api]
+# Identity is verified against Auth /user on every request in the function.
+# This supports Supabase's current asymmetric signing keys as well as legacy keys.
+verify_jwt = false

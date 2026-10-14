@@ -1,0 +1,10 @@
+.cloud-locked #sidebar,.cloud-locked header,.cloud-locked footer,.cloud-locked #navBackdrop{display:none!important}
+.cloud-locked .shell{margin:0!important;padding:0!important}.cloud-locked #main{min-height:100vh;padding:clamp(24px,5vw,80px)}
+.cloud-auth{max-width:1080px;min-height:80vh;margin:auto;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+.cloud-auth-intro h1{font-size:clamp(32px,4vw,54px);line-height:1.5;white-space:pre-line;color:#142d55}
+.cloud-auth-intro p{font-size:19px;line-height:1.9;color:#53657e}.cloud-auth-card{padding:36px!important;border-top:5px solid #3e71db}
+.cloud-auth-card .field{margin:22px 0}.cloud-auth-card input{min-height:48px}.cloud-auth-card button{min-height:46px}
+.cloud-auth-card #cloudAuthMessage{color:#9b3442;font-size:14px;line-height:1.7}.cloud-auth-note{font-size:14px!important;color:#53657e;margin-top:24px;line-height:1.9}
+.cloud-config-error{max-width:700px;margin:10vh auto;padding:32px}.cloud-config-error p{line-height:1.9}
+.cloud-status{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.cloud-status article{padding:22px;border:1px solid #dce4f0;border-radius:16px;background:#f7faff}
+@media(max-width:760px){.cloud-auth{grid-template-columns:1fr;gap:24px}.cloud-auth-intro h1{font-size:30px}.cloud-auth-card{padding:24px!important}.cloud-status{grid-template-columns:1fr}}

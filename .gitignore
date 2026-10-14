@@ -1,0 +1,16 @@
+.sites-runtime/
+node_modules/
+.env*
+*.log
+artifacts/
+cloud/config.local.js
+cloud/engine.mjs
+cloud/supabase/functions/_shared/
+cloud/initial-state.json
+*.key
+*.pem
+*.enc
+*backup*.json
+cloud/bootstrap.local.sql
+__pycache__/
+*.pyc
