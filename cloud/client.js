@@ -19,7 +19,8 @@ function loginScreen(message = '', mode = 'login') {
     const msg=document.getElementById('cloudAuthMessage');
     try {
       if (reset) {
-        await client.auth.resetPasswordForEmail(document.getElementById('cloudEmail').value.trim(),{redirectTo:location.origin+location.pathname});
+        const {error}=await client.auth.resetPasswordForEmail(document.getElementById('cloudEmail').value.trim(),{redirectTo:location.origin+location.pathname});
+        if(error)throw new Error(text('تعذر إرسال رابط الاسترجاع حاليًا. حاول مرة أخرى أو تواصل مع مسؤول الشركة.','Unable to send a recovery link right now. Try again or contact your administrator.'));
         msg.textContent=text('لو الحساب متاح، هيوصلك رابط استرجاع.','If the account is available, a recovery link will be sent.'); return;
       }
       if (update) {
