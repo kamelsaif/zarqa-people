@@ -98,6 +98,36 @@ test('PostgreSQL grants, atomic revisions, owner protection and account links',a
  });
  await db.close();
 });
+test('admin activity includes committed backups and account links without exposing them to employees',async()=>{
+ const env={APP_ORIGIN:'https://hr.example.com',SUPABASE_URL:'https://test.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'server-secret'};
+ const state=fixture();state.audit=[{id:'business',at:'2026-10-15T01:00:00Z',actor:user.email,action:'settings.save'}];
+ let role='admin',auditReads=0;
+ const handler=createHandler(key=>env[key],async url=>{
+  if(url.endsWith('/auth/v1/user'))return Response.json(user);
+  if(url.includes('/hr_workspace?'))return Response.json([{data:state,revision:3}]);
+  if(url.includes('/hr_members?user_id='))return Response.json([{...membership,role}]);
+  if(url.includes('/hr_members?select='))return Response.json([membership]);
+  if(url.includes('/hr_audit?')){
+   auditReads++;
+   const query=new URL(url).searchParams;
+   assert.equal(query.get('action'),'in.(data.backup,account.link)');
+   assert.equal(query.get('limit'),'500');
+   return Response.json([
+    {id:2,at:'2026-10-15T03:00:00Z',user_id:user.id,action:'account.link',revision:3},
+    {id:1,at:'2026-10-15T02:00:00Z',user_id:user.id,action:'data.backup',revision:2}
+   ]);
+  }
+  throw Error('Unexpected request');
+ });
+ const request=()=>new Request('https://test.supabase.co/functions/v1/hr-api',{method:'POST',headers:{Origin:env.APP_ORIGIN,Authorization:'Bearer verified'},body:JSON.stringify({action:'getState'})});
+ const response=await handler(request());assert.equal(response.status,200);
+ const data=await response.json();
+ assert.deepEqual(data.audit.map(row=>row.action),['account.link','data.backup','settings.save']);
+ assert.equal(data.audit[1].actor,user.email);
+ assert.equal(state.audit.length,1,'Server audit is a read-only view, not written into workspace data');
+ role='employee';const employeeView=await (await handler(request())).json();
+ assert.deepEqual(employeeView.audit,[]);assert.equal(auditReads,1);
+});
 test('cloud artifact is closed by default, excludes seed fixtures, and parses',async()=>{
  const html=await fs.readFile('artifacts/godaddy/index.html','utf8');
  const app=await fs.readFile('artifacts/godaddy/app.js','utf8');

@@ -11,12 +11,48 @@ function settingsPage(){
  '<p>'+tx('لإدارة حسابات الفريق وفحص الاتصال والنسخ الاحتياطية، افتح مركز البيانات والحسابات.','Open Data & accounts to manage team access, verify connections and create backups.')+'</p>',
  '<a class="btn primary" href="#data">'+tx('إدارة البيانات والحسابات','Manage data & accounts')+'</a>')+'</div>';
 }
+const workspaceActionTitle=actionTitle;
+const workspaceReportData=reportData;
+reportData=function(kind){
+ const report=workspaceReportData(kind);
+ if(kind==='audit')report.headers[0]=tx('الوقت (UTC)','Time (UTC)');
+ return report;
+};
+actionTitle=function(action){
+ if(action==='data.backup')return tx('إنشاء نسخة احتياطية مشفرة','Encrypted backup created');
+ if(action==='account.link')return tx('ربط حساب مستخدم','User account linked');
+ return workspaceActionTitle(action);
+};
+let cloudAdminTask='';
+function cloudAdminButton(ar,en,action,primary=false){
+ return '<button class="btn'+(primary?' primary':'')+'" data-action="'+action+'" '+(dataCenterBusy?'disabled aria-busy="true"':'')+'>'+tx(ar,en)+'</button>';
+}
+async function checkDataConnection(makeBackup=false){
+ if(role!=='admin'||dataCenterBusy)return;
+ dataCenterBusy=true;cloudAdminTask=makeBackup?'backup':'check';dataCenterError='';render();
+ let backupSaved=false;
+ try{
+  if(makeBackup){
+   const saved=await callServer('admin.backup');
+   dataCenterStatus={...dataCenterStatus,...saved};
+   state.settings.lastBackupAt=saved.lastBackupAt;
+   backupSaved=true;
+   state=await callServer('getState');
+  }
+  // Backup responses describe the snapshot, not every connected service.
+  dataCenterStatus=await callServer('admin.status');
+  if(makeBackup)toast(tx('تم حفظ نسخة خاصة في Drive','Private backup saved in Drive'));
+ }catch(error){
+  if(!makeBackup)dataCenterStatus=null;
+  dataCenterError=tx(backupSaved?'تم حفظ النسخة، لكن تعذر تحديث الحالة. حدّث البيانات قبل إنشاء نسخة أخرى: ':'تعذر إكمال العملية: ',backupSaved?'Backup saved, but status refresh failed. Refresh records before creating another backup: ':'Could not complete the operation: ')+String(error.message||error);
+ }finally{dataCenterBusy=false;cloudAdminTask='';if(page==='data'&&role==='admin')render();}
+}
 function dataCenterPage(){
  if(role!=='admin')return '<div class="empty">'+tx('هذه الصفحة لمسؤول النظام','Administrator access required')+'</div>';
  const d=dataCenterStatus;
  return heading(tx('البيانات والحسابات','Data & accounts'),tx('إدارة مساحة الشركة والخدمات المتصلة.','Manage company records and connected services.'),'','WORKSPACE ADMINISTRATION')+
  '<div class="cloud-status"><article><span class="badge blue">DATABASE</span><h3>Supabase PostgreSQL</h3><p>'+tx('السجلات والصلاحيات على الخادم','Records and permissions on the server')+'</p></article><article><span class="badge teal">DOCUMENTS</span><h3>Google Drive</h3><p>'+tx(d?.driveConnected?'تم التحقق من الاتصال':'بانتظار الإعداد أو الفحص',d?.driveConnected?'Connection verified':'Setup or verification pending')+'</p></article><article><span class="badge violet">EMAIL</span><h3>Resend</h3><p>'+tx(d?.emailConfigured?'الإعدادات موجودة؛ يلزم اختبار التسليم':'لم يُتحقق من إعداد الإرسال',d?.emailConfigured?'Configured; delivery test still required':'Sending configuration not verified')+'</p></article></div>'+
- '<div class="form-actions">'+btn(tx('فحص الاتصال','Check connection'),'dataCheck','','primary')+btn(tx('تحديث البيانات','Refresh records'),'cloudRefresh')+'</div>'+
+ '<div class="form-actions">'+cloudAdminButton(cloudAdminTask==='check'?'جارٍ الفحص…':'فحص الاتصال',cloudAdminTask==='check'?'Checking…':'Check connection','dataCheck',true)+cloudAdminButton('تحديث البيانات','Refresh records','cloudRefresh')+'</div>'+
  (dataCenterError?'<p class="notice" role="alert">'+esc(dataCenterError)+'</p>':'')+
  accountsPanel()+backupsPanel();
 }
@@ -35,7 +71,7 @@ function accessForm(email=''){
 function backupsPanel(){
  return card(tx('نسخة احتياطية مشفّرة','Encrypted backup'),tx('نسخة يدوية من سجلات HR وعضوية الحسابات إلى Drive','Manual snapshot of HR records and account membership to Drive'),
  '<p>'+tx('آخر نسخة مؤكدة: ','Last confirmed backup: ')+esc(dataTime(dataCenterStatus?.lastBackupAt||state.settings.lastBackupAt))+'</p><p>'+tx('المستندات الأصلية وكلمات المرور ليست داخل هذه النسخة. احتفظ بمفتاح فك التشفير في مكان مستقل.','Original documents and passwords are not included. Keep the decryption key separately.')+'</p>',
- btn(tx('إنشاء نسخة الآن','Create backup now'),'cloudBackup','','primary'));
+ cloudAdminButton(cloudAdminTask==='backup'?'جارٍ حفظ النسخة…':'إنشاء نسخة الآن',cloudAdminTask==='backup'?'Saving backup…':'Create backup now','cloudBackup',true));
 }
 function authInfo(){modal('<h2>'+tx('تسجيل الدخول','Sign-in')+'</h2><p>'+tx('Supabase يتحقق من البريد وكلمة المرور. مسؤول الشركة يربط الحساب ويحدد صلاحياته. لا يمكن عرض كلمات المرور من البرنامج.','Supabase verifies email and password. The administrator links each account and assigns access. Passwords cannot be displayed by this application.')+'</p>');}
 function cloudSetup(){modal('<h2>'+tx('إعداد الخدمات','Service setup')+'</h2><p>'+tx('اتصال Supabase مخصص لهذه النسخة. مفاتيح Resend وGoogle Drive تُضبط في أسرار الخادم، وليس في الواجهة. راجع دليل النشر المرفق بالمشروع.','Supabase is configured for this edition. Resend and Google Drive credentials belong in server secrets, not the browser. See the deployment guide included in the repository.')+'</p>');}
@@ -44,7 +80,7 @@ document.addEventListener('click',async event=>{
  if(el.dataset.action==='cloudLogout'){await window.ZarqaCloud.logout();return;}
  if(role!=='admin')return;
  try {
-  if(el.dataset.action==='cloudRefresh'){state=await callServer('getState');render();}
+  if(el.dataset.action==='cloudRefresh'&&!dataCenterBusy){state=await callServer('getState');render();}
   if(el.dataset.action==='cloudLinkForm')modal('<h2>'+tx('ربط مستخدم مسجل','Link registered user')+'</h2><form id="cloudLinkForm">'+field(tx('بريد المستخدم المؤكد','Verified user email'),'email','email')+selectField(tx('الدور','Role'),'role',['employee','manager','hr','finance','admin'])+selectField(tx('ملف الموظف','Employee profile'),'employeeId',[{value:'',label:tx('حساب إداري بدون ملف','Administrative account without profile')},...employeeOptions(true)])+'<div class="form-actions"><button class="btn primary" type="submit">'+tx('ربط الحساب','Link account')+'</button></div></form>');
   if(el.dataset.action==='cloudToggleAccount'){
    const a=state.access.find(a=>a.userId===el.dataset.id);if(!a)return;

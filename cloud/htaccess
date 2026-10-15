@@ -2,6 +2,8 @@ Options -Indexes
 DirectoryIndex index.html
 <IfModule mod_rewrite.c>
   RewriteEngine On
+  # ACME HTTP validation tokens contain no application data.
+  RewriteRule ^\.well-known/acme-challenge/[A-Za-z0-9_-]+$ - [END]
   RewriteCond %{HTTPS} !=on
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=308,L]
 </IfModule>

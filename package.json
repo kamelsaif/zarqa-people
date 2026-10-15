@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "pretest": "npm run build:cloud",
-    "test": "node tests/core.test.cjs && node tests/operations.test.cjs && node tests/interface.test.cjs && node tests/data-admin.test.cjs && node --test tests/cloud.test.mjs",
+    "test": "node tests/core.test.cjs && node tests/operations.test.cjs && node tests/interface.test.cjs && node tests/data-admin.test.cjs && node --test tests/cloud.test.mjs tests/cloud-client.test.mjs tests/cloud-admin-ui.test.mjs",
     "build:cloud": "node scripts/build-cloud.mjs",
     "package:cloud": "npm run build:cloud && python3 scripts/package-cloud.py"
   },
