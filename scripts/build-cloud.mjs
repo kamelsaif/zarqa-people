@@ -44,6 +44,7 @@ await fs.copyFile(path.join(root,'cloud/config.example.js'),path.join(output,'cl
 await fs.copyFile(path.join(root,'cloud/ui.js'),path.join(output,'cloud-ui.js'));
 await fs.copyFile(path.join(root,'cloud/cloud.css'),path.join(output,'cloud.css'));
 await fs.copyFile(path.join(root,'cloud/htaccess'),path.join(output,'.htaccess'));
+await fs.copyFile(path.join(root,'cloud/privacy.html'),path.join(output,'privacy.html'));
 // The backend contains the existing validated business rules, without demo fixtures.
 const engine=await fs.readFile(path.join(root,'dist/core.js'),'utf8')+'\n'+await fs.readFile(path.join(root,'dist/operations-core.js'),'utf8')+
  '\nexport {hrMutate,hrEnsureOperations,hrDate,hrRequestVisible};\n';
