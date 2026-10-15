@@ -8,7 +8,7 @@ function setup(callServer,language='en'){
  const notices=[];
  const context=vm.createContext({role:'admin',page:'data',dataCenterBusy:false,dataCenterStatus:null,dataCenterError:'',
   state:{settings:{}},callServer,render(){},toast:message=>notices.push(message),
-  tx:(ar,en)=>language==='ar'?ar:en,actionTitle:action=>action,document:{addEventListener(){}},
+  tx:(ar,en)=>language==='ar'?ar:en,actionTitle:action=>action,reportData:()=>({headers:[]}),document:{addEventListener(){}},
   card:(title,subtitle,body,actions)=>body+actions,esc:String,dataTime:value=>value||'Not recorded yet'});
  vm.runInContext(source,context);
  return {context,notices};

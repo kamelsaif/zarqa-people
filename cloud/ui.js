@@ -12,6 +12,12 @@ function settingsPage(){
  '<a class="btn primary" href="#data">'+tx('إدارة البيانات والحسابات','Manage data & accounts')+'</a>')+'</div>';
 }
 const workspaceActionTitle=actionTitle;
+const workspaceReportData=reportData;
+reportData=function(kind){
+ const report=workspaceReportData(kind);
+ if(kind==='audit')report.headers[0]=tx('الوقت (UTC)','Time (UTC)');
+ return report;
+};
 actionTitle=function(action){
  if(action==='data.backup')return tx('إنشاء نسخة احتياطية مشفرة','Encrypted backup created');
  if(action==='account.link')return tx('ربط حساب مستخدم','User account linked');
