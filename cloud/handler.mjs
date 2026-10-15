@@ -31,7 +31,16 @@ export function createHandler(env, fetcher = fetch) {
   async function member(userId) { return (await db('hr_members?user_id=eq.'+encodeURIComponent(userId)+'&select=*'))?.[0]; }
   async function view(state,actor) {
     const members = actor.role === 'admin' ? await db('hr_members?select=user_id,email,role,employee_id,active') : [];
-    return scopeState(state,actor,members);
+    const scoped = scopeState(state,actor,members);
+    if (actor.role === 'admin') {
+      // These operations are committed by PostgreSQL, outside the business-rule audit array.
+      const systemAudit = await db('hr_audit?select=id,at,user_id,action,revision&action=in.(data.backup,account.link)&order=at.desc&limit=500');
+      const emails = new Map(members.map(member => [member.user_id,member.email]));
+      scoped.audit = [...scoped.audit,...systemAudit.map(row => ({
+        id:'server-'+row.id,at:row.at,actor:emails.get(row.user_id)||row.user_id,action:row.action
+      }))].sort((a,b)=>Date.parse(b.at)-Date.parse(a.at)).slice(0,500);
+    }
+    return scoped;
   }
   async function commit(state, actor, operation, expected, memberChange = null) {
     const revision = await db('rpc/hr_commit','POST',{expected_revision:expected,next_data:state,

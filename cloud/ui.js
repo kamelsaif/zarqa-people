@@ -11,6 +11,12 @@ function settingsPage(){
  '<p>'+tx('لإدارة حسابات الفريق وفحص الاتصال والنسخ الاحتياطية، افتح مركز البيانات والحسابات.','Open Data & accounts to manage team access, verify connections and create backups.')+'</p>',
  '<a class="btn primary" href="#data">'+tx('إدارة البيانات والحسابات','Manage data & accounts')+'</a>')+'</div>';
 }
+const workspaceActionTitle=actionTitle;
+actionTitle=function(action){
+ if(action==='data.backup')return tx('إنشاء نسخة احتياطية مشفرة','Encrypted backup created');
+ if(action==='account.link')return tx('ربط حساب مستخدم','User account linked');
+ return workspaceActionTitle(action);
+};
 let cloudAdminTask='';
 function cloudAdminButton(ar,en,action,primary=false){
  return '<button class="btn'+(primary?' primary':'')+'" data-action="'+action+'" '+(dataCenterBusy?'disabled aria-busy="true"':'')+'>'+tx(ar,en)+'</button>';
